@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Фибоначијев тајни код</title>
+<style>
+:root{
+ --ink:#202b3a; --paper:#fbf7ed; --cream:#f4ecd9; --teal:#176b68;
+ --teal2:#2f9287; --coral:#e4775e; --gold:#e8b84e; --plum:#66527d;
+ --muted:#66717d; --line:#d9d2c3; --white:#fffdf8;
+}
+*{box-sizing:border-box}
+body{margin:0;background:#e9e5dc;color:var(--ink);font-family:Georgia,"Times New Roman",serif}
+button{font:inherit;cursor:pointer}
+.app{max-width:1040px;min-height:100vh;margin:auto;background:var(--paper);box-shadow:0 0 45px #26334218;overflow:hidden;position:relative}
+.topline{height:9px;background:linear-gradient(90deg,var(--teal) 0 34%,var(--coral) 34% 67%,var(--gold) 67%)}
+header{display:flex;align-items:center;justify-content:space-between;padding:20px clamp(18px,5vw,54px);border-bottom:1px solid var(--line);gap:14px}
+.brand{display:flex;align-items:center;gap:11px;font:700 12px/1.2 Arial,sans-serif;letter-spacing:.16em;text-transform:uppercase;color:var(--teal)}
+.brandmark{width:34px;height:34px;border:1.5px solid var(--teal);border-radius:50%;display:grid;place-items:center;font:italic 23px Georgia;color:var(--coral)}
+.progress{font:700 11px Arial,sans-serif;letter-spacing:.12em;color:var(--muted)}
+main{padding:clamp(24px,5vw,56px);min-height:660px}
+.eyebrow{font:700 11px Arial,sans-serif;letter-spacing:.2em;text-transform:uppercase;color:var(--coral);margin-bottom:14px}
+h1,h2,h3,p{margin-top:0}
+h1{font-size:clamp(42px,7vw,76px);line-height:.98;max-width:700px;margin-bottom:22px;font-weight:500;letter-spacing:-.04em}
+h2{font-size:clamp(29px,4vw,43px);line-height:1.08;font-weight:500;margin-bottom:16px}
+h3{font-size:21px;font-weight:500}
+p{font-size:18px;line-height:1.55;color:#4b5662}
+.lead{font-size:clamp(18px,2.1vw,21px);max-width:690px}
+.hero{display:grid;grid-template-columns:1.2fr .8fr;gap:30px;align-items:center}
+.hero-art{min-height:310px;border:1px solid var(--line);background:#f1eadb;display:grid;place-items:center;position:relative;overflow:hidden}
+.hero-art:before,.hero-art:after{content:"";position:absolute;border:1px solid #176b6833;border-radius:50%;width:270px;height:270px}
+.hero-art:after{width:190px;height:190px;border-color:#e4775e66}
+.golden{font-size:100px;color:var(--teal);z-index:1;font-weight:400}
+.hero-note{position:absolute;bottom:17px;right:18px;font:italic 13px Georgia;color:var(--muted)}
+.btn{border:0;background:var(--teal);color:white;padding:15px 23px;font:700 12px Arial,sans-serif;letter-spacing:.13em;text-transform:uppercase;border-radius:2px;transition:.18s}
+.btn:hover{background:#105653;transform:translateY(-1px)}
+.btn.secondary{background:transparent;color:var(--teal);border:1px solid var(--teal)}
+.actions{display:flex;gap:12px;flex-wrap:wrap;margin-top:28px}
+.card{background:var(--white);border:1px solid var(--line);padding:clamp(18px,3vw,28px);margin:22px 0}
+.question-no{font:700 11px Arial,sans-serif;color:var(--coral);letter-spacing:.17em;text-transform:uppercase;margin-bottom:12px}
+.answers{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:23px}
+.answer{padding:17px 12px;background:#f4f0e6;border:1px solid var(--line);color:var(--ink);font:600 16px Arial,sans-serif;min-height:58px}
+.answer:hover{border-color:var(--teal);background:#e8f1eb}
+.answer.selected{background:#dcebe5;border:2px solid var(--teal);padding:16px 11px}
+.answer.correct{background:#e1efe4;border:2px solid #43835b}
+.answer.wrong{background:#f8e6df;border:2px solid var(--coral)}
+.feedback{min-height:28px;margin-top:15px;font:600 14px Arial,sans-serif;color:var(--teal)}
+.lock-message{color:var(--coral)!important;font-weight:700}
+button:disabled{cursor:not-allowed;opacity:.65}
+.gridpuzzle{width:min(330px,80vw);aspect-ratio:1;margin:22px auto 6px;display:grid;grid-template-columns:repeat(3,1fr);border:4px solid var(--ink);background:white}
+.gridpuzzle span{border:2px solid var(--ink)}
+.note{font:italic 14px Georgia;color:var(--muted)}
+.stagebar{display:flex;align-items:center;gap:9px;margin-bottom:30px}
+.stagebar span{height:5px;flex:1;background:#ded8cb}
+.stagebar span.active{background:var(--teal)}
+.flash-wrap{background:#17212b;padding:24px;border:1px solid #0e1720;margin-top:24px}
+.flashfield{height:310px;position:relative;overflow:hidden;background:#17171c;cursor:crosshair;touch-action:pan-y}
+.flashfield .hidden-option{position:absolute;color:#fff;background:transparent;border:0;font:700 18px Arial,sans-serif;padding:12px 18px;border-radius:12px;z-index:1}
+.flashfield .hidden-option.found{color:#fff;background:var(--coral);box-shadow:0 0 20px #e4775e}
+.flashfield .hidden-option:disabled{opacity:1}
+.flashfield:before{content:"";position:absolute;inset:0;background:radial-gradient(circle 95px at var(--x,50%) var(--y,50%),transparent 0 48%,#050a0eeF 76%);pointer-events:none;z-index:2}
+.hidden-number{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);font:bold 130px Georgia;color:#f0c65e;text-shadow:0 0 25px #f0c65e88}
+.flash-instruction{color:#e9e4d9;font:13px Arial,sans-serif;text-align:center;margin:14px 0 0}
+.clues{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:18px}
+.clue{background:#f3eee3;border:1px solid var(--line);padding:13px;font-size:14px;line-height:1.4}
+.clue b{display:block;color:var(--coral);font:700 10px Arial,sans-serif;letter-spacing:.12em;margin-bottom:7px}
+.visuals{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin:24px 0}
+.visual{border:1px solid var(--line);background:var(--white);padding:10px;text-align:center;position:relative}
+.visual button{border:0;background:none;padding:0;width:100%;color:inherit}
+.visual .art{height:150px;display:grid;place-items:center;background:#f1eadb;overflow:hidden}
+.visual .art svg{width:100%;height:100%}
+.visual .caption{font:700 13px Arial,sans-serif;margin:11px 0 3px}
+.visual.chosen{outline:3px solid var(--teal);background:#eaf2eb}
+.visual.chosen:after{content:"✓";position:absolute;right:10px;top:10px;background:var(--teal);color:white;border-radius:50%;width:25px;height:25px;display:grid;place-items:center;font:700 15px Arial}
+.multi-hint{font:700 12px Arial,sans-serif;color:var(--coral);letter-spacing:.04em}
+.reward{display:grid;place-items:center;text-align:center;min-height:410px}
+.reward-number{font-size:112px;color:var(--coral);line-height:1;margin:15px}
+.codebox{display:flex;gap:8px;justify-content:center;margin:20px 0}
+.codebox input{width:170px;text-align:center;font:700 24px Arial,sans-serif;letter-spacing:.2em;padding:13px;border:1px solid var(--teal);background:white;color:var(--ink)}
+footer{padding:17px 25px;border-top:1px solid var(--line);display:flex;justify-content:space-between;gap:12px;color:var(--muted);font:11px Arial,sans-serif}
+.hidden{display:none!important}
+@media(max-width:700px){.hero{grid-template-columns:1fr}.hero-art{min-height:220px}.answers,.visuals,.clues{grid-template-columns:1fr}.visual .art{height:180px}main{min-height:unset}.flashfield{height:260px}header{padding:15px 18px}}
+</style>
+</head>
+<body>
+<div class="app">
+<div class="topline"></div>
+<header><div class="brand"><div class="brandmark">φ</div><span>Математичка мисија<br>Бројеви и трагови</span></div><div class="progress" id="progress">ПОЧЕТАК · 00 / 03</div></header>
+<main id="screen"></main>
+<footer><span>ФИБОНАЧИЈЕВ ТАЈНИ КОД</span><span>ИСТРАЖИ · ОТКРИЈ · ЗАПАМТИ</span></footer>
+</div>
+<script>
+const screen=document.getElementById('screen'), progress=document.getElementById('progress');
+let quizIndex=0, selected=[], stage=0;
+const rewards=[];
+function setProgress(label){progress.textContent=label}
+function start(){stage=1;quizIndex=0;renderQuiz()}
+function home(){
+ setProgress('ПОЧЕТАК · 00 / 03');
+ screen.innerHTML=`<div class="hero"><div><div class="eyebrow">Тајна математичке бележнице</div><h1>Фибоначијев<br><span style="color:var(--teal)">тајни код</span></h1><p class="lead">Пре много векова, Леонардо из Пизе, познат као Фибоначи, открио је необичан низ бројева. Тај низ крије математичке правилности које се могу пронаћи свуда око нас – у природи, уметности и свету бројева.</p><p>Међутим, његова бележница са најважнијим открићем је закључана. Три броја која откључавају тајну нестала су, а остали су само трагови.</p><p><b>Да ли сте спремни да кренете у потрагу?</b></p><button class="btn" onclick="start()">Започните мисију!</button></div><div class="hero-art"><div class="golden">φ</div><div class="hero-note">Белешка бр.  Fibonacci</div></div></div>`;
+}
+const questions=[
+ {q:'Који је најмањи природан број?',a:['0','2','1'],c:2},
+ {q:'Који математичар се сматра оцем геометрије?',a:['Питагора','Еуклид','Фибоначи'],c:1},
+ {q:'Који од понуђених бројева је дељив са 4?',a:['126','132','145'],c:1},
+ {q:'Који од понуђених бројева је сложен?',a:['91','97','101'],c:0},
+ {q:'Отац има 40 година, а син 10 година. За колико година ће отац бити три пута старији од сина?',a:['10 година','5 година','15 година'],c:1},
+ {q:'Колико квадрата видиш на слици?',a:['9','13','14'],c:2,grid:true}
+];
+function renderQuiz(){
+ setProgress(`ИЗАЗОВ 01 · ${String(quizIndex+1).padStart(2,'0')} / 06`);
+ const q=questions[quizIndex];
+ screen.innerHTML=`<div class="stagebar"><span class="active"></span><span></span><span></span></div><div class="eyebrow">Први траг · Математички изазов</div><div class="question-no">ПИТАЊЕ ${quizIndex+1} ОД 6</div><h2>${q.q}</h2>${q.grid?'<div class="gridpuzzle" aria-label="Мрежа од девет малих квадрата">'+Array(9).fill('<span></span>').join('')+'</div>':''}<div class="answers">${q.a.map((a,i)=>`<button class="answer" onclick="answer(${i})">${a}</button>`).join('')}</div><div class="feedback" id="feedback"></div>`;
+}
+let lockTimer=null;
+function lockForMinute(buttons, feedback, message='Погрешан одговор. Пауза од једног минута – пажљиво размислите пре следећег покушаја.'){
+ let remaining=60;
+ buttons.forEach(b=>b.disabled=true);
+ feedback.classList.add('lock-message');
+ feedback.textContent=`${message} Можете поново за ${remaining} сек.`;
+ if(lockTimer) clearInterval(lockTimer);
+ lockTimer=setInterval(()=>{
+  remaining--;
+  if(remaining>0){feedback.textContent=`${message} Можете поново за ${remaining} сек.`;}
+  else{
+   clearInterval(lockTimer);lockTimer=null;
+   buttons.forEach(b=>{b.disabled=false;b.classList.remove('wrong')});
+   feedback.classList.remove('lock-message');
+   feedback.textContent='Сада можете поново да покушате.';
+  }
+ },1000);
+}
+function answer(i){
+ const q=questions[quizIndex], buttons=[...document.querySelectorAll('.answer')], fb=document.getElementById('feedback');
+ buttons.forEach(b=>b.disabled=true);
+ if(i===q.c){buttons[i].classList.add('correct');fb.textContent='Тачно! Открили сте траг.';setTimeout(()=>{quizIndex++;quizIndex<questions.length?renderQuiz():rewardScreen(0,3)},850)}
+ else{buttons[i].classList.add('wrong');lockForMinute(buttons,fb,'Није тачно. Покушајте поново тек након паузе.')}
+}
+function rewardScreen(which,num){
+ rewards[which]=String(num);stage=which+2;
+ setProgress(`НАГРАДА · ${which+1} / 03`);
+ screen.innerHTML=`<div class="reward"><div><div class="eyebrow">Траг је пронађен</div><h2>Запишите број!</h2><div class="reward-number">${num}</div><p>Сачувајте овај број. Биће вам потребан за завршни тајни код.</p><button class="btn" onclick="${which===0?'flashChallenge()':which===1?'imageChallenge()':'finalCode()'}">Наставите</button></div></div>`;
+}
+const fibQuestions=[
+ {q:'У ком граду је рођен Фибоначи?',a:['Пиза','Фиренца','Падова'],c:0},
+ {q:'Под којим именом је Фибоначи познат?',a:['Леонардо','Микеланђело','Галилео'],c:0},
+ {q:'У ком веку је рођен Фибоначи?',a:['11. век','12. век','13. век'],c:1}
+];
+let fibIndex=0;
+function flashChallenge(){
+ fibIndex=0;
+ renderFibQuestion();
+}
+function renderFibQuestion(){
+ setProgress(`ИЗАЗОВ 02 · ${fibIndex+1} / 03`);
+ screen.innerHTML=`<div class="stagebar"><span class="active"></span><span class="active"></span><span></span></div><div class="eyebrow">Други траг · Потрага у мраку</div><div class="question-no">ПИТАЊЕ ${fibIndex+1} ОД 3</div><h2>${fibQuestions[fibIndex].q}</h2><p>Померајте светлосни круг, пронађите одговоре и осветлите онај за који мислите да је тачан. Када га пронађете, кликните на њега.</p><div class="flash-wrap"><div class="flashfield" id="flash"><div id="flashOptions"></div></div><div class="flash-instruction">ПОМЕРАЈТЕ МИША ИЛИ ПРСТ ДА БИСТЕ ОСВЕТЛИЛИ ОДГОВОРЕ</div></div><div class="feedback" id="fibFeedback"></div>`;
+ const f=document.getElementById('flash'), q=fibQuestions[fibIndex], box=document.getElementById('flashOptions');
+ const positions=[['12%','28%'],['62%','30%'],['35%','69%']];
+ q.a.forEach((a,i)=>{
+  const el=document.createElement('button');el.className='hidden-option';el.textContent=a;
+  el.style.left=positions[i][0];el.style.top=positions[i][1];
+  el.onclick=()=>fibAnswer(i,el);box.appendChild(el);
+ });
+ function move(e){const r=f.getBoundingClientRect();let x=(e.clientX-r.left)/r.width*100,y=(e.clientY-r.top)/r.height*100;f.style.setProperty('--x',x+'%');f.style.setProperty('--y',y+'%')}
+ f.addEventListener('pointermove',move);f.addEventListener('pointerdown',move);
+}
+function fibAnswer(i,el){
+ const q=fibQuestions[fibIndex], buttons=[...document.querySelectorAll('#flashOptions button')], fb=document.getElementById('fibFeedback');
+ if(i===q.c){
+  buttons.forEach(b=>b.disabled=true);el.classList.add('found');fb.textContent='Тачно! Пронашли сте одговор.';
+  setTimeout(()=>{fibIndex++;fibIndex<fibQuestions.length?renderFibQuestion():rewardScreen(1,8)},850);
+ }else{
+  lockForMinute(buttons,fb,'То није тачан одговор. Наставите да истражујете, па покушајте поново.');
+ }
+}
+const svgSun=`<svg viewBox="0 0 180 150"><g transform="translate(90 76)">${Array.from({length:18},(_,i)=>`<ellipse cx="0" cy="-49" rx="12" ry="29" transform="rotate(${i*20})" fill="#e7b84f" stroke="#c58d31" stroke-width="1"/>`).join('')}<circle r="37" fill="#65452d"/>${Array.from({length:50},(_,i)=>`<circle cx="${Math.cos(i*2.4)*((i%7)*4+3)}" cy="${Math.sin(i*2.4)*((i%7)*4+3)}" r="2" fill="#e8bd61"/>`).join('')}</g><path d="M90 113v34" stroke="#44775b" stroke-width="5"/></svg>`;
+const svgTulip=`<svg viewBox="0 0 180 150"><path d="M90 70 Q78 110 90 145" stroke="#477b58" stroke-width="6" fill="none"/><path d="M88 112 Q52 85 45 120 Q67 135 88 119" fill="#6e9a68"/><path d="M90 80 Q44 68 56 25 Q77 32 90 55 Q103 24 124 25 Q137 68 90 80Z" fill="#d87568" stroke="#b85d58" stroke-width="2"/></svg>`;
+const svgDaisy=`<svg viewBox="0 0 180 150"><g transform="translate(90 67)">${Array.from({length:12},(_,i)=>`<ellipse cx="0" cy="-29" rx="10" ry="24" transform="rotate(${i*30})" fill="#fffdf7" stroke="#d6d0c2"/>`).join('')}<circle r="17" fill="#e7b84f"/></g><path d="M90 85v60" stroke="#477b58" stroke-width="5"/><path d="M90 118q-28-22-38 0q22 18 38 0" fill="#6e9a68"/></svg>`;
+const svgGalaxy=`<svg viewBox="0 0 180 150"><rect width="180" height="150" fill="#202b43"/>${Array.from({length:40},(_,i)=>`<circle cx="${(i*47)%180}" cy="${(i*31)%150}" r="${i%4===0?1.7:0.8}" fill="#fff4cf"/>`).join('')}<g transform="translate(90 75) rotate(-20)"><path d="M-68 0 C-42-55 30-52 55-10 C78 29 12 56-28 30 C-52 15-34-20 0-20 C25-20 30 7 10 15" fill="none" stroke="#e7c47b" stroke-width="10" opacity=".75"/><circle r="9" fill="#fff1c4"/></g></svg>`;
+const svgDunes=`<svg viewBox="0 0 180 150"><rect width="180" height="150" fill="#e9d7b4"/><path d="M0 93 Q40 15 90 80 T180 55 V150 H0Z" fill="#c99e68"/><path d="M0 112 Q65 43 110 98 T180 82" fill="none" stroke="#f6e8c9" stroke-width="5"/><path d="M0 130 Q58 73 120 124 T180 110" fill="none" stroke="#a77a50" stroke-width="3"/></svg>`;
+const svgFall=`<svg viewBox="0 0 180 150"><rect width="180" height="150" fill="#d9e4df"/><path d="M0 0H180L151 39H28Z" fill="#637f70"/><path d="M54 35 Q64 75 52 150H127Q112 75 127 35Z" fill="#82b8c1"/><path d="M74 42V145M91 40V145M108 42V145" stroke="#e9f5ed" stroke-width="4" opacity=".8"/><path d="M0 143Q50 126 90 143T180 140" fill="none" stroke="#568e9a" stroke-width="7"/></svg>`;
+const svgPine=`<svg viewBox="0 0 180 150"><g transform="translate(90 76) rotate(8)"><path d="M0-62 C-48-36-48 39 0 64 C48 39 48-36 0-62Z" fill="#9a7048" stroke="#65452d" stroke-width="3"/>${Array.from({length:7},(_,i)=>`<path d="M-35 ${-42+i*13} Q0 ${-25+i*13} 35 ${-42+i*13}" fill="none" stroke="#d1a16c" stroke-width="7" stroke-linecap="round"/>`).join('')}</g></svg>`;
+const svgNaut=`<svg viewBox="0 0 180 150"><rect width="180" height="150" fill="#dce9e7"/><path d="M91 16 C146 17 159 84 123 120 C89 154 31 126 28 82 C25 43 65 24 91 39 C116 53 117 87 94 101 C76 111 56 96 61 78 C65 63 82 59 91 70 C99 80 92 91 83 90" fill="#f2e2bf" stroke="#8b7557" stroke-width="5"/><path d="M91 16C70 30 54 44 47 66M123 120Q93 130 67 113" fill="none" stroke="#b79c73" stroke-width="2"/></svg>`;
+const svgLeaf=`<svg viewBox="0 0 180 150"><path d="M35 122Q14 35 139 19Q151 103 35 122Z" fill="#77a46c" stroke="#477b58" stroke-width="3"/><path d="M35 122Q89 78 139 19M71 92L60 58M94 73L91 42M83 87L118 82" stroke="#d9e7c8" stroke-width="3" fill="none"/></svg>`;
+function visualCard(id,label,svg){return `<div class="visual" id="${id}"><button onclick="toggleVisual('${id}')"><div class="art">${svg}</div><div class="caption">${label}</div></button></div>`}
+function toggleVisual(id){document.getElementById(id).classList.toggle('chosen')}
+function imageChallenge(){
+ setProgress('ИЗАЗОВ 03 · СЛИКЕ');
+ screen.innerHTML=`<div class="stagebar"><span class="active"></span><span class="active"></span><span class="active"></span></div><div class="eyebrow">Трећи траг · Математика у природи</div><div class="question-no">ПИТАЊЕ 1 ОД 3</div><h2>Који цвет је повезан са Фибоначијевим низом?</h2><p>Изаберите слику на којој се уочава карактеристичан распоред семенки.</p><div class="visuals">${visualCard('sun','Сунцокрет',svgSun)}${visualCard('tulip','Лала',svgTulip)}${visualCard('daisy','Рада',svgDaisy)}</div><div class="feedback" id="visualFeedback"></div><button class="btn" onclick="checkSun()">Потврди избор</button>`;
+}
+function lockVisual(button, feedback, message){
+ let remaining=60;button.disabled=true;feedback.classList.add('lock-message');
+ feedback.textContent=`${message} Можете поново за ${remaining} сек.`;
+ const timer=setInterval(()=>{remaining--;if(remaining>0){feedback.textContent=`${message} Можете поново за ${remaining} сек.`;}else{clearInterval(timer);button.disabled=false;feedback.classList.remove('lock-message');feedback.textContent='Сада можете поново да изаберете.'}},1000);
+}
+function checkSun(){let ok=document.getElementById('sun').classList.contains('chosen')&&!document.getElementById('tulip').classList.contains('chosen')&&!document.getElementById('daisy').classList.contains('chosen');let f=document.getElementById('visualFeedback'),b=document.querySelector('.btn');if(ok){f.textContent='Тачно! Сунцокрет крије спирални распоред семенки.';setTimeout(galaxyQuestion,900)}else lockVisual(b,f,'Погрешан избор. Пауза од једног минута.')}
+function galaxyQuestion(){
+ screen.innerHTML=`<div class="eyebrow">Трећи траг · Питање 2 од 3</div><h2>На којој слици препознајеш спирални облик повезан са Фибоначијевом спиралом?</h2><p>Изаберите једну слику.</p><div class="visuals">${visualCard('gal','Млечни пут',svgGalaxy)}${visualCard('dune','Пустињске дине',svgDunes)}${visualCard('fall','Водопад',svgFall)}</div><div class="feedback" id="visualFeedback"></div><button class="btn" onclick="checkGalaxy()">Потврди избор</button>`;
+}
+function checkGalaxy(){let ok=document.getElementById('gal').classList.contains('chosen')&&!document.getElementById('dune').classList.contains('chosen')&&!document.getElementById('fall').classList.contains('chosen');let f=document.getElementById('visualFeedback'),b=document.querySelector('.btn');if(ok){f.textContent='Тачно! Спирални кракови галаксије подсећају на овај облик.';setTimeout(natureQuestion,900)}else lockVisual(b,f,'Погрешан избор. Пауза од једног минута.')}
+function natureQuestion(){
+ screen.innerHTML=`<div class="eyebrow">Трећи траг · Питање 3 од 3</div><h2>Означи све слике на којима препознајеш природне спиралне облике који подсећају на Фибоначијеву спиралу.</h2><p class="multi-hint">МОГУЋЕ ЈЕ ИЗАБРАТИ ВИШЕ ОДГОВОРА</p><div class="visuals">${visualCard('pine','Шишарка',svgPine)}${visualCard('naut','Наутилус',svgNaut)}${visualCard('leaf','Лист',svgLeaf)}</div><div class="feedback" id="visualFeedback"></div><button class="btn" onclick="checkNature()">Потврди избор</button>`;
+}
+function checkNature(){let p=document.getElementById('pine').classList.contains('chosen'),n=document.getElementById('naut').classList.contains('chosen'),l=document.getElementById('leaf').classList.contains('chosen');let f=document.getElementById('visualFeedback'),b=document.querySelector('.btn');if(p&&n&&!l){f.textContent='Одлично! Пронашли сте оба спирална обрасца.';setTimeout(()=>rewardScreen(2,89),900)}else lockVisual(b,f,'Није тачно. Пауза од једног минута.')}
+function finalCode(){
+ setProgress('ЗАВРШНИ КОД');
+ screen.innerHTML=`<div class="reward"><div><div class="eyebrow">Последња брава</div><h2>Откључајте Фибоначијеву бележницу</h2><p>Унесите три броја која сте записали током мисије, редом којим сте их открили. Без размака и знакова.</p><div class="codebox"><input id="code" maxlength="5" inputmode="numeric" autocomplete="off" placeholder="••••"></div><div class="feedback" id="codeFeedback"></div><button class="btn" onclick="checkCode()">Откључај бележницу</button></div></div>`;
+}
+function checkCode(){let v=document.getElementById('code').value.trim(),f=document.getElementById('codeFeedback');if(v==='3889'){f.textContent='УСПЕХ! Бележница је откључана. Тајна је откривена!';f.style.color='var(--teal)';setTimeout(()=>{screen.innerHTML=`<div class="reward"><div><div class="eyebrow">Мисија успешно завршена</div><h1 style="font-size:56px">Тајна је<br><span style="color:var(--teal)">откривена!</span></h1><p>Фибоначијев низ повезује бројеве, природу и облике света око нас.</p><p><b>Браво, истраживачи!</b></p><button class="btn secondary" onclick="home()">Играј поново</button></div></div>`;setProgress('МИСИЈА ЗАВРШЕНА')},1300)}else{f.textContent='Код није тачан. Проверите записане бројеве и покушајте поново.';f.style.color='var(--coral)'}}
+home();
+</script>
+</body>
+</html>
